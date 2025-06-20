@@ -5,6 +5,8 @@ import com.example.kafka.consumers.AdvancedConsumerDemo;
 import com.example.kafka.streams.StreamsDemo;
 import com.example.kafka.transactions.TransactionDemo;
 import com.example.kafka.partitioning.ConsumerRebalancingPatternsDemo;
+import com.example.kafka.partitioning.CuttingEdgeUseCasesDemo;
+import com.example.kafka.eventsourcing.EventSourcingDemo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,9 +85,11 @@ public class App {
                 System.out.println("3. Kafka Streams Demo");
                 System.out.println("4. Transaction Demo");
                 System.out.println("5. Consumer Rebalancing Patterns Demo");
-                System.out.println("6. Show System Information");
+                System.out.println("6. Cutting-Edge Use Cases Demo");
+                System.out.println("7. Event Sourcing & CQRS Demo");
+                System.out.println("8. Show System Information");
                 System.out.println("0. Exit");
-                System.out.print("Select an option (0-6): ");
+                System.out.print("Select an option (0-8): ");
                 
                 try {
                     int choice = scanner.nextInt();
@@ -117,15 +121,25 @@ public class App {
                         runInThread(() -> ConsumerRebalancingPatternsDemo.main(new String[]{}));
                         break;
                     case 6:
+                        System.out.println("\nStarting Cutting-Edge Use Cases Demo...");
+                        System.out.println("This demo shows next-generation distributed systems patterns including AI/ML, IoT, and real-time analytics");
+                        runInThread(() -> CuttingEdgeUseCasesDemo.main(new String[]{}));
+                        break;
+                    case 7:
+                        System.out.println("\nStarting Event Sourcing & CQRS Demo...");
+                        System.out.println("This demo shows advanced event sourcing patterns with Kafka as event store");
+                        runInThread(() -> EventSourcingDemo.main(new String[]{}));
+                        break;
+                    case 8:
                         showSystemInformation();
                         break;
                     case 0:
                         System.out.println("Exiting Kafka Showcase. Goodbye!");
                         return;
                     default:
-                        System.out.println("Invalid option. Please select 0-6.");
+                        System.out.println("Invalid option. Please select 0-8.");
                 }                } catch (Exception e) {
-                    System.out.println("Invalid input. Please enter a number between 0-6.");
+                    System.out.println("Invalid input. Please enter a number between 0-8.");
                     scanner.nextLine(); // Clear invalid input
                 }
             }

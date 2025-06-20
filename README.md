@@ -53,6 +53,20 @@ This project demonstrates the following advanced Kafka capabilities:
 - **Multi-tenant SaaS**: Tenant isolation with SLA-based resource allocation
 - **Streaming Analytics**: ML model deployment with capacity-aware assignment
 
+### 🌟 Cutting-Edge Use Cases
+- **AI/ML Model Serving**: Real-time inference pipelines with GPU-aware processing
+- **Autonomous Vehicles**: Fleet management with safety-critical event handling
+- **Real-time Fraud Detection**: Financial transaction monitoring with risk scoring
+- **Smart City Infrastructure**: IoT sensor networks with edge processing
+- **Cryptocurrency Trading**: High-frequency trading with latency optimization
+
+### 📚 Event Sourcing & CQRS
+- **Event Store**: Kafka as immutable event log with complete audit trails
+- **Command-Query Separation**: Separate read and write models for optimal performance
+- **Event Replay**: Historical reconstruction and new projection building
+- **Saga Patterns**: Distributed transaction coordination across aggregates
+- **Compliance**: GDPR-compliant data handling with temporal queries
+
 ## 🏗️ Project Structure
 
 ```
@@ -146,6 +160,12 @@ docker-compose ps
 
 # Consumer rebalancing patterns demo
 java -jar app/build/libs/app.jar rebalancing
+
+# Cutting-edge use cases demo
+java -jar app/build/libs/app.jar cutting-edge
+
+# Event sourcing and CQRS demo
+java -jar app/build/libs/app.jar event-sourcing
 ```
 
 ## 📊 Monitoring and Visualization
@@ -208,6 +228,22 @@ Demonstrates real-world scenarios:
 - **IoT Fleet Management**: Zone-aware rebalancing with hot-standby consumers for fault tolerance
 - **Multi-tenant SaaS Platform**: Tenant isolation with SLA-based resource allocation and tier changes
 - **Streaming Analytics Pipeline**: ML model deployment with capacity-aware assignment for GPU/CPU optimization
+
+### Cutting-Edge Use Cases Demo
+Demonstrates next-generation patterns:
+- **AI/ML Model Serving**: Real-time inference pipelines with dynamic model deployment
+- **Autonomous Vehicle Fleet**: Safety-critical event processing with redundancy
+- **Real-Time Fraud Detection**: Financial monitoring with risk-based prioritization
+- **Smart City Infrastructure**: IoT sensor networks with edge computing
+- **Cryptocurrency Trading**: High-frequency trading with ultra-low latency
+
+### Event Sourcing & CQRS Demo
+Demonstrates advanced architectural patterns:
+- **Event Store Implementation**: Kafka as immutable event log with ordering guarantees
+- **Command Processing**: Transactional command handling with event publication
+- **Event Replay**: Historical state reconstruction and projection building
+- **CQRS Projections**: Specialized read models for different query patterns
+- **Saga Patterns**: Distributed transaction coordination with correlation tracking
 
 ### Consumer Assignment Patterns
 Demonstrates:
