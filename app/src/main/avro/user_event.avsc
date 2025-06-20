@@ -1,0 +1,47 @@
+{
+  "type": "record",
+  "name": "UserEvent",
+  "namespace": "com.example.kafka.avro",
+  "fields": [
+    {
+      "name": "eventId",
+      "type": "string",
+      "doc": "Unique identifier for the event"
+    },
+    {
+      "name": "userId",
+      "type": "long",
+      "doc": "ID of the user who triggered the event"
+    },
+    {
+      "name": "eventType",
+      "type": {
+        "type": "enum",
+        "name": "EventType",
+        "symbols": ["LOGIN", "LOGOUT", "PURCHASE", "PROFILE_UPDATE", "PASSWORD_CHANGE"]
+      },
+      "doc": "Type of event that occurred"
+    },
+    {
+      "name": "timestamp",
+      "type": "long",
+      "logicalType": "timestamp-millis",
+      "doc": "When the event occurred"
+    },
+    {
+      "name": "metadata",
+      "type": {
+        "type": "map",
+        "values": "string"
+      },
+      "default": {},
+      "doc": "Additional metadata about the event"
+    },
+    {
+      "name": "sessionId",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Session ID if applicable"
+    }
+  ]
+}

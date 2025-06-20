@@ -1,0 +1,50 @@
+{
+  "type": "record",
+  "name": "User",
+  "namespace": "com.example.kafka.avro",
+  "fields": [
+    {
+      "name": "id",
+      "type": "long",
+      "doc": "Unique identifier for the user"
+    },
+    {
+      "name": "email",
+      "type": "string",
+      "doc": "User's email address"
+    },
+    {
+      "name": "firstName",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "User's first name"
+    },
+    {
+      "name": "lastName",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "User's last name"
+    },
+    {
+      "name": "createdAt",
+      "type": "long",
+      "logicalType": "timestamp-millis",
+      "doc": "Timestamp when user was created"
+    },
+    {
+      "name": "isActive",
+      "type": "boolean",
+      "default": true,
+      "doc": "Whether the user account is active"
+    },
+    {
+      "name": "preferences",
+      "type": {
+        "type": "map",
+        "values": "string"
+      },
+      "default": {},
+      "doc": "User preferences as key-value pairs"
+    }
+  ]
+}
