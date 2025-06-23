@@ -123,7 +123,42 @@ int partition = Utils.toPositive(Utils.murmur2(keyBytes)) % numPartitions;
 - Shopping cart management
 - Real-time recommendations
 
-### 6. Hybrid Partitioning
+### 6. Modulus Partitioning
+
+**Use Case**: Sequential key distribution and numeric load balancing
+
+**Description**: Use modulus operation on numeric keys to achieve even distribution across partitions. Particularly effective for sequential numeric keys where hash-based partitioning might create hotspots.
+
+**Implementation**:
+```java
+// Extract numeric value from key and use modulus
+int numericValue = extractNumericValue(key);
+int partition = numericValue % numPartitions;
+```
+
+**Key Formats Supported**:
+- Pure numeric keys: `"12345"`
+- Prefixed numeric keys: `"ORDER_12345"`, `"USER_67890"`
+- Mixed format keys: `"2024_01_ORDER_12345"`
+
+**Benefits**:
+- Even distribution for sequential keys
+- Predictable partition assignment
+- Avoids hash collision hotspots
+- Optimal for numeric ID systems
+
+**Example Scenarios**:
+- Order processing systems with sequential order IDs
+- User management with incremental user IDs
+- Transaction processing with sequential transaction numbers
+- Event processing with numeric timestamps
+
+**Advanced Features**:
+- Fallback to hash partitioning for non-numeric keys
+- Support for composite keys with numeric components
+- Configurable numeric extraction patterns
+
+### 7. Hybrid Partitioning
 
 **Use Case**: Complex applications with multiple requirements
 
@@ -131,11 +166,13 @@ int partition = Utils.toPositive(Utils.murmur2(keyBytes)) % numPartitions;
 
 **Implementation**:
 ```java
-// Choose strategy based on message type
+// Choose strategy based on message type and key characteristics
 if (isFinancialTransaction(message)) {
     return geographicPartition(key);
 } else if (isUserInteraction(message)) {
     return consistentHashPartition(key);
+} else if (hasNumericKey(message) || key.startsWith("mod:")) {
+    return modulusPartition(key);
 } else {
     return temporalPartition(key);
 }
@@ -288,6 +325,30 @@ String userData = String.format("strategy=GEOGRAPHIC_AFFINITY;region=%s", consum
 - Apply appropriate assignment strategy per consumer group
 - Optimize for both throughput and latency
 
+### 6. Order Processing System
+
+**Challenge**: Process sequential order IDs efficiently while avoiding partition hotspots.
+
+**Solution**: Modulus partitioning + Load-balanced assignment
+- Use modulus partitioning for sequential order IDs
+- Ensure even distribution across all partitions
+- Maintain order processing sequence within each partition
+
+**Implementation**:
+```java
+// Producer: Modulus partitioning for order IDs
+String orderKey = String.format("ORDER_%d", orderId);
+
+// Consumer: Load-balanced processing
+String userData = "strategy=LOAD_BALANCED";
+```
+
+**Benefits**:
+- Even distribution for sequential IDs
+- Predictable partition assignment
+- Avoids hotspots from hash-based partitioning
+- Optimal for high-volume order processing
+
 ## Implementation Details
 
 ### Custom Partitioner
@@ -296,12 +357,13 @@ String userData = String.format("strategy=GEOGRAPHIC_AFFINITY;region=%s", consum
 public class AdvancedPartitioner implements Partitioner {
     
     public enum PartitionStrategy {
-        GEOGRAPHIC,    // Region-based partitioning
-        TEMPORAL,      // Time-based partitioning
-        USER_TIER,     // Tier-based partitioning
-        LOAD_BALANCED, // Even distribution
+        GEOGRAPHIC,      // Region-based partitioning
+        TEMPORAL,        // Time-based partitioning
+        USER_TIER,       // Tier-based partitioning
+        LOAD_BALANCED,   // Even distribution
         CONSISTENT_HASH, // Session affinity
-        HYBRID         // Multiple strategies
+        MODULUS,         // Numeric key distribution
+        HYBRID           // Multiple strategies
     }
     
     @Override
@@ -321,6 +383,8 @@ public class AdvancedPartitioner implements Partitioner {
                 return loadBalancedPartition(key, cluster);
             case CONSISTENT_HASH:
                 return consistentHashPartition(keyBytes, cluster);
+            case MODULUS:
+                return modulusPartition(key, cluster);
             case HYBRID:
                 return hybridPartition(topic, key, value, cluster);
             default:
@@ -374,6 +438,7 @@ public class AdvancedPartitionAssignor extends AbstractPartitionAssignor {
 2. **Key Distribution**: Ensure even key distribution to avoid hot partitions
 3. **Partition Size**: Monitor partition sizes to prevent oversized partitions
 4. **Rebalancing**: Minimize rebalancing frequency to reduce overhead
+5. **Modulus Strategy**: Use modulus partitioning for sequential numeric keys to avoid hash-based hotspots
 
 ### Consumer Assignment
 
@@ -397,6 +462,7 @@ public class AdvancedPartitionAssignor extends AbstractPartitionAssignor {
 2. **Plan for Growth**: Design partitioning scheme for future scale
 3. **Monitor Hot Partitions**: Implement alerting for uneven load distribution
 4. **Test Rebalancing**: Validate behavior during consumer restarts
+5. **Numeric Key Optimization**: Use modulus partitioning for sequential numeric keys to achieve better distribution than hash-based approaches
 
 ### Consumer Assignment
 
