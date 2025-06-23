@@ -192,7 +192,10 @@ public class AdvancedProducerDemo {
             // 3. User Tier Partitioning
             demonstrateUserTierPartitioning();
             
-            // 4. Consistent Hash Partitioning
+            // 4. Modulus Partitioning
+            demonstrateModulusPartitioning();
+            
+            // 5. Consistent Hash Partitioning
             demonstrateConsistentHashPartitioning();
             
             producer.commitTransaction();
@@ -321,6 +324,48 @@ public class AdvancedProducerDemo {
                     Thread.currentThread().interrupt();
                 }
             }
+        }
+    }
+    
+    /**
+     * Modulus partitioning for even distribution with numeric keys
+     */
+    private void demonstrateModulusPartitioning() {
+        logger.info("--- Modulus Partitioning ---");
+        
+        // Scenario 1: Sequential user IDs for even distribution
+        for (int i = 1; i <= 12; i++) {
+            Long userId = 5000L + i;
+            
+            UserEvent event = UserEvent.newBuilder()
+                .setUserId(userId)
+                .setEventType(EventType.LOGIN)
+                .setTimestamp(Instant.now().toEpochMilli())
+                .setRegion("US")
+                .setCountry("USA")
+                .setSessionId("session_" + userId)
+                .build();
+            
+            // Use user ID as key for modulus partitioning
+            sendWithCallback(USER_EVENTS_TOPIC, userId.toString(), event, "Modulus");
+        }
+        
+        // Scenario 2: Order IDs with predictable distribution
+        for (int i = 1; i <= 10; i++) {
+            Long orderId = 10000L + i;
+            Long userId = 6000L + (i % 5); // Cycle through 5 users
+            
+            UserEvent event = UserEvent.newBuilder()
+                .setUserId(userId)
+                .setEventType(EventType.PURCHASE)
+                .setTimestamp(Instant.now().toEpochMilli())
+                .setRegion("US")
+                .setCountry("USA")
+                .setSessionId("order_session_" + orderId)
+                .build();
+            
+            // Use order ID for deterministic partition assignment
+            sendWithCallback(USER_EVENTS_TOPIC, "order:" + orderId, event, "Modulus");
         }
     }
     

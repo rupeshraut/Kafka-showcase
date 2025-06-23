@@ -56,7 +56,10 @@ public class PartitioningPatternsDemo {
             // 5. Cross-Zone Resilient Assignment Demo
             demonstrateCrossZoneResilientAssignment();
             
-            // 6. Custom Partitioning Strategies Demo
+            // 6. Modulus Partitioning Demo
+            demonstrateModulusPartitioning();
+            
+            // 7. Custom Partitioning Strategies Demo
             demonstrateCustomPartitioningStrategies();
             
         } catch (Exception e) {
@@ -390,6 +393,93 @@ public class PartitioningPatternsDemo {
                 Thread.currentThread().interrupt();
             }
         });
+    }
+    
+    /**
+     * Real-world use case: Order processing system with sequential order IDs
+     * 
+     * Scenario: E-commerce platform generates orders with sequential IDs (1, 2, 3, ...).
+     * Requirements: Simple, predictable partition assignment with even distribution.
+     * Modulus partitioning ensures deterministic assignment and even load distribution.
+     */
+    private static void demonstrateModulusPartitioning() {
+        logger.info("=== Modulus Partitioning Demo ===");
+        
+        Properties producerProps = KafkaConfigFactory.createProducerConfig();
+        producerProps.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, AdvancedPartitioner.class.getName());
+        producerProps.put("partitioning.strategy", "MODULUS");
+        producerProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        producerProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        
+        try (KafkaProducer<String, String> producer = new KafkaProducer<>(producerProps)) {
+            
+            // Scenario 1: Sequential order IDs
+            logger.info("--- Sequential Order IDs ---");
+            for (int orderId = 1001; orderId <= 1020; orderId++) {
+                String orderData = String.format(
+                    "{\"orderId\":%d, \"customerId\":\"%s\", \"amount\":%.2f, \"timestamp\":%d}",
+                    orderId, "customer" + (orderId % 5), 99.99 + (orderId % 100), System.currentTimeMillis()
+                );
+                
+                ProducerRecord<String, String> record = new ProducerRecord<>(TOPIC_GLOBAL_EVENTS, 
+                    String.valueOf(orderId), orderData);
+                
+                producer.send(record, (metadata, exception) -> {
+                    if (exception == null) {
+                        logger.info("Sequential order {} -> partition {} (modulus: {} % partitions)", 
+                            record.key(), metadata.partition(), record.key());
+                    }
+                });
+            }
+            
+            // Scenario 2: User IDs with numeric extraction
+            logger.info("--- User IDs with Mixed Format ---");
+            String[] userKeys = {"user:2001", "customer-3001", "account_4001", "5001", "member:6001"};
+            for (String userKey : userKeys) {
+                String userData = String.format(
+                    "{\"userId\":\"%s\", \"action\":\"login\", \"timestamp\":%d}",
+                    userKey, System.currentTimeMillis()
+                );
+                
+                ProducerRecord<String, String> record = new ProducerRecord<>(TOPIC_GLOBAL_EVENTS, 
+                    userKey, userData);
+                
+                producer.send(record, (metadata, exception) -> {
+                    if (exception == null) {
+                        logger.info("User key {} -> partition {} (numeric extraction + modulus)", 
+                            record.key(), metadata.partition());
+                    }
+                });
+            }
+            
+            // Scenario 3: Transaction IDs for financial processing
+            logger.info("--- Financial Transaction IDs ---");
+            for (int i = 0; i < 15; i++) {
+                long transactionId = 7000000L + i;
+                String transactionData = String.format(
+                    "{\"transactionId\":%d, \"amount\":%.2f, \"currency\":\"USD\", \"timestamp\":%d}",
+                    transactionId, 250.0 + (i * 10), System.currentTimeMillis()
+                );
+                
+                ProducerRecord<String, String> record = new ProducerRecord<>(TOPIC_FINANCIAL_DATA, 
+                    String.valueOf(transactionId), transactionData);
+                
+                producer.send(record, (metadata, exception) -> {
+                    if (exception == null) {
+                        logger.info("Transaction {} -> partition {} (large numeric modulus)", 
+                            record.key(), metadata.partition());
+                    }
+                });
+            }
+            
+            producer.flush();
+        }
+        
+        logger.info("Modulus partitioning benefits:");
+        logger.info("✓ Deterministic: Same key always goes to same partition");
+        logger.info("✓ Even distribution: Numeric keys distribute evenly across partitions");
+        logger.info("✓ Simple and fast: Minimal computational overhead");
+        logger.info("✓ Predictable: Easy to understand and debug partition assignment");
     }
     
     /**

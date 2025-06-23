@@ -42,6 +42,7 @@ public class AdvancedPartitioner implements Partitioner {
         USER_TIER,       // Route by user subscription tier
         LOAD_BALANCED,   // Avoid hot partitions
         CONSISTENT_HASH, // Session affinity with consistent hashing
+        MODULUS,         // Simple modulus-based partitioning for even distribution
         HYBRID          // Combination of multiple strategies
     }
     
@@ -94,6 +95,8 @@ public class AdvancedPartitioner implements Partitioner {
                 return loadBalancedPartition(keyString, numPartitions);
             case CONSISTENT_HASH:
                 return consistentHashPartition(keyString, numPartitions);
+            case MODULUS:
+                return modulusPartition(keyString, numPartitions);
             case HYBRID:
                 return hybridPartition(keyString, value, numPartitions);
             default:
@@ -238,6 +241,59 @@ public class AdvancedPartitioner implements Partitioner {
     }
     
     /**
+     * Simple modulus-based partitioning for even distribution
+     * Use case: Simple, predictable partitioning when even distribution is the primary goal
+     * 
+     * This method provides:
+     * - Deterministic partition assignment (same key always goes to same partition)
+     * - Even distribution across partitions for sequential or numeric keys
+     * - Simple and fast computation with minimal overhead
+     * - Useful for numeric IDs, sequential keys, or when simplicity is preferred
+     */
+    private int modulusPartition(String key, int numPartitions) {
+        logger.debug("Applying modulus partitioning for key: {}", key);
+        
+        // Try to extract numeric value from key for better distribution
+        long numericKey = extractNumericValue(key);
+        
+        if (numericKey != -1) {
+            // Use numeric value directly for modulus
+            int partition = (int) (numericKey % numPartitions);
+            logger.debug("Numeric key {} -> partition {}", numericKey, partition);
+            return partition;
+        } else {
+            // Fall back to hash-based modulus for non-numeric keys
+            int hashCode = key.hashCode();
+            int partition = Utils.toPositive(hashCode) % numPartitions;
+            logger.debug("Hash-based key {} (hash: {}) -> partition {}", key, hashCode, partition);
+            return partition;
+        }
+    }
+    
+    /**
+     * Extract numeric value from key for modulus partitioning
+     * Supports various key formats like "user:123", "order-456", "789", etc.
+     */
+    private long extractNumericValue(String key) {
+        try {
+            // First try to parse the entire key as a number
+            return Long.parseLong(key);
+        } catch (NumberFormatException e) {
+            // If not a pure number, try to extract numbers from the key
+            String numericPart = key.replaceAll("[^0-9]", "");
+            if (!numericPart.isEmpty()) {
+                try {
+                    return Long.parseLong(numericPart);
+                } catch (NumberFormatException ex) {
+                    // If the numeric part is too large, return -1
+                    return -1;
+                }
+            }
+            return -1;
+        }
+    }
+    
+    /**
      * Hybrid partitioning combining multiple strategies
      * Use case: Complex applications requiring different strategies for different data types
      */
@@ -251,6 +307,9 @@ public class AdvancedPartitioner implements Partitioner {
             return userTierPartition(key, value, numPartitions);
         } else if (key.startsWith("session:")) {
             return consistentHashPartition(key, numPartitions);
+        } else if (key.startsWith("mod:") || key.matches("\\d+")) {
+            // Use modulus for numeric keys or keys with "mod:" prefix
+            return modulusPartition(key, numPartitions);
         } else {
             return loadBalancedPartition(key, numPartitions);
         }

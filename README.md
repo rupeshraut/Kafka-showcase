@@ -6,7 +6,13 @@ A comprehensive demonstration of cutting-edge Apache Kafka features and patterns
 
 This project demonstrates the following advanced Kafka capabilities:
 
-### 🔒 Exactly-Once Semantics
+### 🔒 Exact# User tier partitioning - key format: "TIER:USER_ID"
+String key = String.format("%s:%d", "VIP", userId);
+
+# Modulus partitioning - simple numeric keys for even distribution
+String key = String.valueOf(orderId); // "12345"
+// Or with prefix: "order:12345", "user:67890"
+```Once Semantics
 - **Transactional Producers**: Guaranteed exactly-once delivery with idempotent producers
 - **Transactional Processing**: Consume-transform-produce patterns with full transaction support
 - **Read Committed Isolation**: Consumers with read-committed isolation level
@@ -217,6 +223,7 @@ Demonstrates:
 - **Geographic Partitioning**: Region-based data placement for compliance and latency
 - **Temporal Partitioning**: Time-based partitioning for efficient time-series queries
 - **User Tier Partitioning**: Service level differentiation with dedicated partitions
+- **Modulus Partitioning**: Simple, deterministic partitioning for even distribution
 - **Consistent Hash Partitioning**: Session affinity for stateful processing
 - **Load-Balanced Partitioning**: Even distribution across partitions
 - **Hybrid Partitioning**: Multiple strategies based on message content
@@ -311,6 +318,18 @@ String userData = "strategy=GEOGRAPHIC_AFFINITY;region=US";
 ProducerRecord<String, TradeEvent> record = new ProducerRecord<>(topic, symbol, trade);
 
 // Consumer: Capacity-aware assignment for heterogeneous infrastructure
+String userData = "strategy=CAPACITY_AWARE;capacity=8.0"; // 8x baseline capacity
+```
+
+#### Order Processing System
+```java
+// Producer: Modulus partitioning for sequential order IDs
+String orderKey = String.valueOf(orderId); // "12345", "12346", "12347"
+
+// Simple, predictable partition assignment with even distribution
+Properties props = KafkaConfigFactory.createProducerConfig();
+props.put("partitioning.strategy", "MODULUS");
+```
 String userData = "strategy=CAPACITY_AWARE;capacity=8.0"; // 8x baseline capacity
 ```
 
